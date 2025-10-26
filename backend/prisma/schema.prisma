@@ -1,0 +1,181 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(USER)
+  avatar    String?
+  phone     String?
+  isActive  Boolean  @default(true)
+
+  // Relations
+  addresses Address[]
+  orders    Order[]
+  products  Product[] @relation("ProductCreator")
+
+  // Password reset
+  resetPasswordToken  String?
+  resetPasswordExpire DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+model Address {
+  id        String  @id @default(cuid())
+  userId    String
+  street    String
+  city      String
+  state     String
+  country   String
+  zipCode   String
+  isDefault Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  name          String
+  description   String   @db.Text
+  price         Float
+  discountPrice Float?
+  category      Category
+  brand         String?
+  stock         Int      @default(0)
+  isActive      Boolean  @default(true)
+
+  // Relations
+  createdBy   String
+  creator     User          @relation("ProductCreator", fields: [createdBy], references: [id])
+  images      ProductImage[]
+  orderItems  OrderItem[]
+
+  // Rating
+  ratingAverage Float @default(0)
+  ratingCount   Int   @default(0)
+
+  // Specifications stored as JSON
+  specifications Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([createdBy])
+  @@index([name])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  url       String
+  alt       String?
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+
+  // Order details
+  itemsPrice    Float
+  taxPrice      Float
+  shippingPrice Float
+  totalPrice    Float
+
+  // Payment
+  paymentMethod String
+  paymentResult Json?
+  isPaid        Boolean   @default(false)
+  paidAt        DateTime?
+
+  // Delivery
+  isDelivered  Boolean   @default(false)
+  deliveredAt  DateTime?
+
+  status OrderStatus @default(PENDING)
+
+  // Relations
+  user          User          @relation(fields: [userId], references: [id])
+  orderItems    OrderItem[]
+  shippingAddress ShippingAddress?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  productId String
+  name      String
+  quantity  Int
+  image     String?
+  price     Float
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model ShippingAddress {
+  id      String @id @default(cuid())
+  orderId String @unique
+  street  String
+  city    String
+  state   String
+  country String
+  zipCode String
+  phone   String
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+// Enums
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Category {
+  ELECTRONICS
+  CLOTHING
+  BOOKS
+  HOME
+  SPORTS
+  OTHER
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}

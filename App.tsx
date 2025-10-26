@@ -7,6 +7,8 @@ import { Category } from './pages/Category';
 import { ProductDetail } from './pages/ProductDetail';
 import { Cart } from './pages/Cart';
 import { Contact } from './pages/Contact';
+import { Login } from './pages/Login';
+import { Register } from './pages/Register';
 import { useThemeStore } from './store/themeStore';
 
 function App() {
@@ -37,6 +39,8 @@ function App() {
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
           </Routes>
         </main>
         <Footer />
