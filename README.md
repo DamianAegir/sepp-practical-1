@@ -1,6 +1,81 @@
-# SEPP React E-commerce Website
+# SEPP Practical 1 - React E-commerce Website
 
 A modern, responsive e-commerce website built with React, TypeScript, and Tailwind CSS for Singapore Polytechnic School of Computing. This project demonstrates a complete online shopping experience with product catalog, shopping cart, contact forms, and dark mode functionality.
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+ and npm 9+
+- Git
+- (Optional) VS Code or your preferred code editor
+
+### Setup Instructions
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/DamianAegir/sepp-practical-1
+   ```
+
+2. **Install frontend dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Setup the backend**
+   ```bash
+   cd backend
+   npm install
+   ```
+
+4. **Environment Setup**
+   - Create a `.env` file in the `backend` directory with the required environment variables:
+     ```
+     PORT=5000
+     DATABASE_URL="your_database_connection_string"
+     JWT_SECRET="your_jwt_secret"
+     NODE_ENV=development
+     ```
+
+5. **Database Setup**
+   - Ensure you have PostgreSQL installed and running
+   - Run database migrations:
+     ```bash
+     cd backend
+     npx prisma migrate dev
+     ```
+
+### Running the Application
+
+1. **Start the backend server**
+   In a terminal, navigate to the `backend` directory and run:
+   ```bash
+   npm run dev
+   ```
+
+2. **Start the frontend development server**
+   In a separate terminal, from the project root, run:
+   ```bash
+   npm run dev
+   ```
+
+3. **Access the application**
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:5000
+   - Prisma Studio (for database management): Run `npx prisma studio` in the backend directory and visit http://localhost:5555
+
+### Building for Production
+
+1. **Build the frontend**
+   ```bash
+   npm run build
+   ```
+
+2. **Start the production server**
+   ```bash
+   cd backend
+   npm start
+   ```
 
 ## 🚀 Features
 

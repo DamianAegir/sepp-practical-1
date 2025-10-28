@@ -7,7 +7,7 @@ export const Cart = () => {
 
   const subtotal = getTotalPrice();
   const shipping = subtotal > 50 ? 0 : 5.99;
-  const tax = subtotal * 0.08; // 8% tax
+  const tax = subtotal * 0.09; // 9% tax
   const total = subtotal + shipping + tax;
 
   if (items.length === 0) {
@@ -144,7 +144,7 @@ export const Cart = () => {
                   </p>
                 )}
                 <div className="flex justify-between text-gray-600 dark:text-gray-400">
-                  <span>Tax (8%)</span>
+                  <span>GST (9%)</span>
                   <span className="font-medium">${tax.toFixed(2)}</span>
                 </div>
               </div>
