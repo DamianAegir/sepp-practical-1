@@ -15,6 +15,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (product.stock <= 0) return;
     setIsAdding(true);
     addItem(product, 1);
     setTimeout(() => setIsAdding(false), 1000);
@@ -36,7 +37,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
         />
-        {!product.inStock && (
+        {product.stock <= 0 && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <span className="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold">
               Out of Stock
@@ -50,9 +51,9 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         )}
         <button
           onClick={handleAddToCart}
-          disabled={!product.inStock || isAdding}
+          disabled={product.stock <= 0 || isAdding}
           className={`absolute bottom-2 right-2 p-3 rounded-full shadow-lg transition-all duration-300 transform
-            ${product.inStock 
+            ${product.stock > 0 
               ? 'bg-blue-600 hover:bg-blue-700 text-white opacity-0 group-hover:opacity-100 hover:scale-110' 
               : 'bg-gray-400 text-gray-200 cursor-not-allowed'
             }
@@ -101,9 +102,9 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         </div>
 
         {/* Stock Status */}
-        {product.inStock ? (
+        {product.stock > 0 ? (
           <span className="inline-block mt-2 text-sm text-green-600 dark:text-green-400 font-medium">
-            In Stock
+            {product.stock} in Stock
           </span>
         ) : (
           <span className="inline-block mt-2 text-sm text-red-600 dark:text-red-400 font-medium">

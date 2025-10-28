@@ -2,12 +2,17 @@ import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Filter, X } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
-import { products, getBrands } from '../data/products';
-import { FilterOptions } from '../types/product';
+import ProductService from '../services/productService';
+import { FilterOptions, Product } from '../types/product';
 
 export const Category = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   const [filters, setFilters] = useState<FilterOptions>({
     category: searchParams.get('category') || undefined,
@@ -18,8 +23,32 @@ export const Category = () => {
     minRating: undefined,
   });
 
-  const brands = getBrands();
-  const categories = Array.from(new Set(products.map(p => p.category)));
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        setLoading(true);
+        const [brandsResponse, categoriesResponse] = await Promise.all([
+          ProductService.getBrands(),
+          ProductService.getCategories()
+        ]);
+
+        if (brandsResponse.success) {
+          setBrands(brandsResponse.data || []);
+        }
+
+        if (categoriesResponse.success) {
+          setCategories(categoriesResponse.data || []);
+        }
+      } catch (err) {
+        console.error('Error fetching initial data:', err);
+        setError('Failed to load filters. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, []);
 
   useEffect(() => {
     const category = searchParams.get('category');
@@ -32,24 +61,26 @@ export const Category = () => {
     }));
   }, [searchParams]);
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      if (filters.category && product.category !== filters.category) return false;
-      if (filters.brand && product.brand !== filters.brand) return false;
-      if (filters.minPrice && product.price < filters.minPrice) return false;
-      if (filters.maxPrice && product.price > filters.maxPrice) return false;
-      if (filters.minRating && product.rating < filters.minRating) return false;
-      if (filters.searchQuery) {
-        const query = filters.searchQuery.toLowerCase();
-        return (
-          product.name.toLowerCase().includes(query) ||
-          product.description.toLowerCase().includes(query) ||
-          product.brand.toLowerCase().includes(query) ||
-          product.category.toLowerCase().includes(query)
-        );
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const response = await ProductService.getProducts(filters);
+        
+        if (response.success) {
+          setProducts(response.data.products || []);
+        } else {
+          setError('Failed to load products');
+        }
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        setError('Failed to load products. Please try again later.');
+      } finally {
+        setLoading(false);
       }
-      return true;
-    });
+    };
+
+    fetchProducts();
   }, [filters]);
 
   const handleFilterChange = (key: keyof FilterOptions, value: any) => {
@@ -70,6 +101,31 @@ export const Category = () => {
 
   const activeFiltersCount = Object.values(filters).filter(v => v !== undefined).length;
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error Loading Products</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -87,7 +143,7 @@ export const Category = () => {
             )}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} found
+            {products.length} {products.length === 1 ? 'product' : 'products'} found
           </p>
         </div>
 
@@ -266,9 +322,9 @@ export const Category = () => {
 
           {/* Products Grid */}
           <div className="lg:col-span-3">
-            {filteredProducts.length > 0 ? (
+            {products.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProducts.map((product) => (
+                {products.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>

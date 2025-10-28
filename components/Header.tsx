@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ShoppingCart,
@@ -13,17 +13,32 @@ import {
 import { useCartStore } from "../store/cartStore";
 import { useThemeStore } from "../store/themeStore";
 import { useAuthStore } from "../store/authStore";
-import { getCategories } from "../data/products";
+import ProductService from "../services/productService";
 
 export const Header = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
   const totalItems = useCartStore((state) => state.getTotalItems());
   const { isDarkMode, toggleTheme } = useThemeStore();
   const { user, isAuthenticated, logout } = useAuthStore();
-  const categories = getCategories();
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await ProductService.getCategories();
+        if (response.success) {
+          setCategories(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleLogout = async () => {
     await logout();
