@@ -1,0 +1,12 @@
+{
+  "name": "sepp-scripts",
+  "version": "1.0.0",
+  "description": "Automation scripts for SEPP E-commerce Platform",
+  "type": "module",
+  "dependencies": {
+    "@prisma/client": "^6.10.1",
+    "bcryptjs": "^2.4.3",
+    "sharp": "^0.33.2",
+    "mime-types": "^2.1.35"
+  }
+}

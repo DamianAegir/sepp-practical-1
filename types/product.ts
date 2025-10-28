@@ -11,7 +11,11 @@ export interface Product {
   features: string[];
   images: string[];
   inStock: boolean;
+  stock: number;
   tags: string[];
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Review {
@@ -37,4 +41,36 @@ export interface FilterOptions {
   brand?: string;
   minRating?: number;
   searchQuery?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface ProductsResponse {
+  products: Product[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data: T;
+  message: string;
+}
+
+// Backend product creation/update interface
+export interface ProductFormData {
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  brand?: string;
+  stock?: number;
+  images?: Array<{
+    url: string;
+    alt?: string;
+  }> | string[];
 }

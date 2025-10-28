@@ -1,24 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Star, Check, ArrowLeft } from 'lucide-react';
-import { getProductById, getReviewsByProductId } from '../data/products';
+import ProductService from '../services/productService';
+import { Product } from '../types/product';
 import { useCartStore } from '../store/cartStore';
 
 export const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const product = id ? getProductById(id) : undefined;
-  const reviews = id ? getReviewsByProductId(id) : [];
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
 
-  if (!product) {
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        const response = await ProductService.getProduct(id);
+        
+        if (response.success) {
+          setProduct(response.data);
+        } else {
+          setError('Product not found');
+        }
+      } catch (err) {
+        console.error('Error fetching product:', err);
+        setError('Failed to load product. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Product Not Found</h2>
+          <h2 className="text-2xl font-bold text-red-600 mb-4">
+            {error || 'Product Not Found'}
+          </h2>
+          <p className="text-gray-600 mb-4">
+            {error || 'The product you are looking for does not exist.'}
+          </p>
           <button
             onClick={() => navigate('/category')}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -31,14 +70,14 @@ export const ProductDetail = () => {
   }
 
   const handleAddToCart = () => {
+    if (!product) return;
     addItem(product, quantity);
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 2000);
   };
 
-  const averageRating = reviews.length > 0
-    ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
-    : product.rating;
+  // For now, we'll use the product rating since we don't have reviews from backend yet
+  const averageRating = product.rating;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -110,7 +149,7 @@ export const ProductDetail = () => {
                   ))}
                 </div>
                 <span className="ml-2 text-gray-600 dark:text-gray-400">
-                  {averageRating.toFixed(1)} ({reviews.length} reviews)
+                  {averageRating.toFixed(1)} ({product.reviews} reviews)
                 </span>
               </div>
 
@@ -135,10 +174,10 @@ export const ProductDetail = () => {
 
               {/* Stock Status */}
               <div className="mb-6">
-                {product.inStock ? (
+                {product.stock > 0 ? (
                   <span className="inline-flex items-center text-green-600 dark:text-green-400 font-medium">
                     <Check className="h-5 w-5 mr-2" />
-                    In Stock
+                    In Stock ({product.stock} available)
                   </span>
                 ) : (
                   <span className="text-red-600 dark:text-red-400 font-medium">Out of Stock</span>
@@ -183,9 +222,9 @@ export const ProductDetail = () => {
                 </div>
                 <button
                   onClick={handleAddToCart}
-                  disabled={!product.inStock}
+                  disabled={product.stock <= 0}
                   className={`flex-1 flex items-center justify-center px-6 py-3 rounded-lg font-semibold transition-all ${
-                    product.inStock
+                    product.stock > 0
                       ? 'bg-blue-600 hover:bg-blue-700 text-white'
                       : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                   } ${isAdded ? 'bg-green-600 hover:bg-green-600' : ''}`}
@@ -197,43 +236,7 @@ export const ProductDetail = () => {
             </div>
           </div>
 
-          {/* Reviews Section */}
-          {reviews.length > 0 && (
-            <div className="border-t border-gray-200 dark:border-gray-700 p-6 lg:p-8">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Customer Reviews</h2>
-              <div className="space-y-6">
-                {reviews.map((review) => (
-                  <div key={review.id} className="border-b border-gray-200 dark:border-gray-700 pb-6 last:border-b-0">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center">
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-4 w-4 ${
-                                i < review.rating
-                                  ? 'text-yellow-400 fill-yellow-400'
-                                  : 'text-gray-300 dark:text-gray-600'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        {review.verified && (
-                          <span className="ml-2 text-xs text-green-600 dark:text-green-400 font-medium">
-                            Verified Purchase
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">{review.date}</span>
-                    </div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{review.title}</h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-2">{review.comment}</p>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">by {review.author}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Note: Reviews functionality will be implemented in future updates */}
         </div>
       </div>
     </div>
