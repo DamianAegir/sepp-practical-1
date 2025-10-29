@@ -9,6 +9,7 @@ import { Cart } from './pages/Cart';
 import { Contact } from './pages/Contact';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import AdminProducts from './pages/AdminProducts';
 import { useThemeStore } from './store/themeStore';
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/admin/products" element={<AdminProducts />} />
           </Routes>
         </main>
         <Footer />
